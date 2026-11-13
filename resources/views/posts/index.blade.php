@@ -16,8 +16,20 @@
             @endforeach
         </select>
 
+        {{-- keep the tag filter when the form is sent --}}
+        @if (request('tag'))
+            <input type="hidden" name="tag" value="{{ request('tag') }}">
+        @endif
+
         <button class="bg-green-700 text-white rounded px-4 py-2 hover:bg-green-800">Filter</button>
     </form>
+
+    @if (request('tag'))
+        <p class="text-sm mb-4">
+            Showing posts tagged <strong>{{ request('tag') }}</strong>.
+            <a href="{{ route('posts.index') }}" class="text-green-700 hover:underline">Clear</a>
+        </p>
+    @endif
 
     {{-- post cards --}}
     <div class="grid gap-4 md:grid-cols-2">
@@ -34,9 +46,26 @@
 
                 <p class="text-sm text-gray-500 mt-1">
                     {{ $post->published_at->format('M d, Y') }}
-                    · {{ $post->views }} views
-                    · Author #{{ $post->author_id }}
+                    &middot; {{ $post->views }} views
+                    &middot; {{ $post->comments_count }} comments
                 </p>
+
+                <p class="text-sm mt-1">
+                    By
+                    <a href="{{ route('authors.show', $post->author) }}" class="text-green-700 hover:underline">
+                        {{ $post->author->name }}
+                    </a>
+                </p>
+
+                {{-- tag badges, each one filters the list --}}
+                <div class="mt-2 flex flex-wrap gap-1">
+                    @foreach ($post->tags as $tag)
+                        <a href="{{ route('posts.index', ['tag' => $tag->name]) }}"
+                           class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded hover:bg-blue-200">
+                            {{ $tag->name }}
+                        </a>
+                    @endforeach
+                </div>
             </div>
         @empty
             <p>No posts match your search.</p>
@@ -50,7 +79,7 @@
 
     @if ($posts->total() > 0)
         <p class="text-sm text-gray-600 mt-2">
-            Showing {{ $posts->firstItem() }}–{{ $posts->lastItem() }} of {{ $posts->total() }} posts
+            Showing {{ $posts->firstItem() }}&ndash;{{ $posts->lastItem() }} of {{ $posts->total() }} posts
         </p>
     @endif
 

@@ -2,41 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Author;
 
-class AuthController extends Controller
+class AuthorController extends Controller
 {
-    public function showLogin()
+    public function show(Author $author)
     {
-        return view('auth.login');
-    }
+        // this author's published posts, newest first, with their tags loaded
+        $posts = $author->posts()
+            ->where('is_published', true)
+            ->with('tags')
+            ->latest('published_at')
+            ->get();
 
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+        // hasManyThrough: counts the comments written on all of this author's posts
+        $commentsReceived = $author->comments()->count();
 
-        if (Auth::attempt($credentials)) {
-            // new session ID after login (prevents session fixation)
-            $request->session()->regenerate();
-
-            return redirect()->intended('/posts');
-        }
-
-        return back()->withErrors([
-            'email' => 'Invalid email or password.',
-        ])->onlyInput('email');
-    }
-
-    public function logout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect('/login');
+        return view('authors.show', compact('author', 'posts', 'commentsReceived'));
     }
 }

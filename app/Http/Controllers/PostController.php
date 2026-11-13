@@ -13,12 +13,22 @@ class PostController extends Controller
     public function index(Request $request)
     {
         $posts = Post::query()
+            // load the author and tags together with the posts (no N+1)
+            ->with(['author', 'tags'])
+            // adds a comments_count number to every post
+            ->withCount('comments')
             ->where('is_published', true)
             ->when($request->filled('q'), function ($query) use ($request) {
                 $query->where('title', 'like', '%' . $request->q . '%');
             })
             ->when($request->filled('category'), function ($query) use ($request) {
                 $query->where('category', $request->category);
+            })
+            // ?tag=Urgent keeps only posts that have a tag with that name
+            ->when($request->filled('tag'), function ($query) use ($request) {
+                $query->whereHas('tags', function ($tagQuery) use ($request) {
+                    $tagQuery->where('name', $request->tag);
+                });
             })
             ->orderByDesc('is_pinned')
             ->latest('published_at')
@@ -37,6 +47,16 @@ class PostController extends Controller
 
         $post->views = $post->views + 1;
         $post->save();
+
+        // load everything the page needs in one go, newest comments first
+        $post->load([
+            'author',
+            'tags',
+            'comments' => function ($query) {
+                $query->orderByDesc('created_at')->orderByDesc('id');
+            },
+            'comments.user',
+        ]);
 
         return view('posts.show', compact('post'));
     }
