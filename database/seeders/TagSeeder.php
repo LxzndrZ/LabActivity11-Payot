@@ -10,7 +10,7 @@ class TagSeeder extends Seeder
 {
     public function run(): void
     {
-        // 'Community' is a placeholder for my own tag, rename it when I decide
+        // my five tags, Community is the one I picked myself
         foreach (['Purok Payot', 'Urgent', 'Libre', 'Schedule', 'Community'] as $name) {
             Tag::create(['name' => $name]);
         }

@@ -51,4 +51,4 @@ npm run dev
 php artisan serve
 ```
 
-On Windows PowerShell, use `copy .env.example .env` instead of `cp`. If `database/database.sqlite` is missing, create an empty file with that name before running the migrate command. Keep `npm run dev` running in one terminal and `php artisan serve` in another, then open http://127.0.0.1:8000.
+On Windows PowerShell, use `copy .env.example .env` instead of `cp`. If `database/database.sqlite` is missing, create an empty file with that name before running the migrate command. Keep `npm run dev` running in one terminal and `php artisan serve` in another, then open http://127.0.0.1:8000 in your browser.
