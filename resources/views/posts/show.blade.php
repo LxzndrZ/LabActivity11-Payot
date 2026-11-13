@@ -38,10 +38,46 @@
         </div>
     </article>
 
-    {{-- comments, newest first (the controller already sorted them) --}}
     <section class="mt-6">
         <h2 class="text-xl font-semibold mb-3">Comments ({{ $post->comments->count() }})</h2>
 
+        {{-- comment form: only for logged-in users --}}
+        @auth
+            <form method="POST" action="{{ route('comments.store', $post) }}" class="bg-white rounded shadow p-4 mb-4">
+                @csrf
+
+                {{-- error summary --}}
+                @if ($errors->any())
+                    <div class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded mb-3">
+                        <p class="font-semibold">Please fix the following:</p>
+                        <ul class="list-disc list-inside text-sm">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <label for="body" class="block text-sm font-medium mb-1">Write a comment</label>
+                <textarea id="body" name="body" rows="3"
+                          class="w-full border rounded px-3 py-2">{{ old('body') }}</textarea>
+                @error('body')
+                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                @enderror
+
+                <button type="submit" class="mt-3 bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">
+                    Post comment
+                </button>
+            </form>
+        @endauth
+
+        @guest
+            <p class="mb-4 text-sm">
+                <a href="{{ route('login') }}" class="text-green-700 hover:underline">Sign in to comment</a>
+            </p>
+        @endguest
+
+        {{-- comments, newest first (the controller already sorted them) --}}
         @forelse ($post->comments as $comment)
             <div class="bg-white rounded shadow p-4 mb-3">
                 <p class="text-sm font-semibold">
