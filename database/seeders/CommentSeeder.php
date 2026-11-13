@@ -29,17 +29,17 @@ class CommentSeeder extends Seeder
         Comment::create([
             'post_id' => $pinned->id,
             'user_id' => $lola->id,
-            'body' => 'Salamat sa pahibalo, mupadong ko sa Sabado.',
+            'body' => 'Salamat sa pahibalo dags, magdala ko og gloves bro.',
         ]);
         Comment::create([
             'post_id' => $pinned->id,
             'user_id' => $kagawad->id,
-            'body' => 'Please bring your own gloves and sacks.',
+            'body' => 'Lamat bro, please bring your neighbors too.',
         ]);
         Comment::create([
             'post_id' => $pinned->id,
             'user_id' => $users->random()->id,
-            'body' => 'Count me in, I will bring my neighbors too.',
+            'body' => 'Nice one bro, muadto ko.',
         ]);
     }
 }

@@ -1,30 +1,43 @@
-# Barangay Bulletin – Purok Payot
+# Barangay Bulletin - Purok Payot (Lab Activity 11)
 
-Lab Activity 10 for 4-334 Full-Stack Web Development (Ateneo de Davao University).
-A small blog for Barangay Matina Crossing Hall in Davao City. Barangay officials (authors) post announcements, and residents can browse, search and page through them. Every page reads real rows from SQLite through Eloquent.
+A small Laravel site for the bulletin board of Purok Payot, Barangay Matina Crossing. Every post shows its author and tags, logged-in residents can comment, and Kagawads can write new posts from the site.
 
-Built by Alexzander Payot.
+My personal setup:
+- Site title: Barangay Bulletin - Purok Payot
+- Posts per page: 6
+- Kagawad: Kagawad Alexzander Payot
+- Pinned post: "Purok Payot Clean-up Drive" (published May 20, 2026)
 
-## My personal values
+## Seeded logins
 
-| Item | Value |
-|---|---|
-| Posts per page | **6**. "Payot" has 5 letters, and the brief says to use 6 when the last name is shorter than 6 letters. |
-| Custom category | **Livelihood** (the other four are Announcement, Health, Peace & Order, Ayuda) |
-| Pinned post | "Purok Payot Clean-up Drive", published on **2026-05-20** (my birthday) |
-| Hand-made author | Kagawad Alexzander Payot, kagawad.payot@bulletin.test, created with `Author::create()` |
+Both accounts use the password `bulletin2026`.
 
-## What is in the database
+| Name | Email | Role |
+|---|---|---|
+| Lola Payot | lola.payot@bulletin.test | Resident (can comment, cannot write posts) |
+| Kagawad Alexzander Payot | kagawad.payot@bulletin.test | Kagawad (can comment and write posts) |
 
-After `php artisan migrate:fresh --seed`:
+## My 5 tags
 
-- 5 authors (my Kagawad + 4 from the factory)
-- 51 posts: 40 published, 10 drafts, plus my pinned post (41 are visible on the site)
+Purok Payot, Urgent, Libre, Schedule, Community
 
-## Pages
+## Relationships and why I used them
 
-- `/posts` shows published posts only, pinned first and then newest. It has a title search (`?q=`), a category filter (`?category=`) and pagination.
-- `/posts/{id}` shows one post and adds 1 to its views. A draft or a missing id gives a 404.
+| Link | Type | Why |
+|---|---|---|
+| User to Author | hasOne (Author belongsTo User) | One login account belongs to one author profile. The link is `authors.user_id`. Residents like Lola have no author profile. |
+| Author to Post | hasMany (Post belongsTo Author) | One author writes many posts. Each post has one author (`posts.author_id`). |
+| Post to Comment | hasMany (Comment belongsTo Post) | One post can get many comments. Each comment is on one post. |
+| User to Comment | hasMany (Comment belongsTo User) | One user can write many comments. Each comment has one writer. |
+| Post and Tag | belongsToMany | A post can have many tags and a tag can be on many posts, so I used the `post_tag` pivot table. I use `sync()` and never insert into it by hand. |
+| Author to Comment | hasManyThrough (through Post) | Comments do not have an author id. They are linked to posts, and posts are linked to authors. This lets me count "comments received" for an author in one call. |
+
+## What I used for the other requirements
+
+- No N+1: the index uses `with(['author', 'tags'])` and `withCount('comments')`. The show page uses `load()` for author, tags and `comments.user`. `preventLazyLoading` is on while developing.
+- Tag filter: `/posts?tag=Urgent` uses `whereHas` on the tags relation.
+- Form Requests: `StoreCommentRequest` (logged-in users only) and `StorePostRequest` (only users with an author profile). The controllers stay thin.
+- Comment too short message: "Purok Payot comments need at least 3 characters."
 
 ## How to run it
 
@@ -38,12 +51,4 @@ npm run dev
 php artisan serve
 ```
 
-Run `npm run dev` and `php artisan serve` in two separate terminals, then open http://127.0.0.1:8000.
-
-If `database/database.sqlite` does not exist, create it first (PowerShell: `New-Item database/database.sqlite`).
-
-## Notes
-
-- `docs/tinker.png` shows `find()`, changing an attribute, and `save()` in tinker.
-- Laravel version: composer installed Laravel 13 for me, but the Artisan commands are the same as in the brief.
-- Tailwind v4 (`@tailwindcss/vite`) is used for the styling.
+On Windows PowerShell, use `copy .env.example .env` instead of `cp`. If `database/database.sqlite` is missing, create an empty file with that name before running the migrate command. Keep `npm run dev` running in one terminal and `php artisan serve` in another, then open http://127.0.0.1:8000.
