@@ -13,11 +13,39 @@
             <a href="{{ route('posts.index') }}" class="text-lg font-bold">
                 Barangay Bulletin – Purok Payot
             </a>
-            <a href="{{ route('posts.index') }}" class="text-sm hover:underline">All Posts</a>
+
+            <div class="flex items-center gap-4 text-sm">
+                <a href="{{ route('posts.index') }}" class="hover:underline">All Posts</a>
+
+                @auth
+                    {{-- only Kagawads (users with an author profile) can write posts --}}
+                    @if (auth()->user()->author)
+                        <a href="{{ route('posts.create') }}" class="hover:underline">New post</a>
+                    @endif
+
+                    <span>Hi, {{ auth()->user()->name }}</span>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="hover:underline">Logout</button>
+                    </form>
+                @endauth
+
+                @guest
+                    <a href="{{ route('login') }}" class="hover:underline">Login</a>
+                @endguest
+            </div>
         </div>
     </nav>
 
     <main class="max-w-5xl mx-auto px-4 py-6 w-full flex-1">
+        {{-- flash message, for example "Comment posted." --}}
+        @if (session('status'))
+            <div class="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded mb-4">
+                {{ session('status') }}
+            </div>
+        @endif
+
         @yield('content')
     </main>
 
