@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePostRequest;
 use App\Models\Post;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -38,6 +40,37 @@ class PostController extends Controller
         $categories = Post::query()->distinct()->orderBy('category')->pluck('category');
 
         return view('posts.index', compact('posts', 'categories'));
+    }
+
+    public function create()
+    {
+        // residents (no author profile) cannot open the form
+        abort_unless(auth()->user()->author, 403);
+
+        return view('posts.create', [
+            'tags' => Tag::orderBy('name')->get(),
+            'categories' => StorePostRequest::CATEGORIES,
+        ]);
+    }
+
+    public function store(StorePostRequest $request)
+    {
+        // validated data without the tags (tags go in the pivot table, not in posts)
+        $data = $request->safe()->except('tags');
+        $data['is_published'] = $request->boolean('is_published');
+        $data['published_at'] = $data['is_published'] ? now() : null;
+
+        // saved through the author's posts relationship, so author_id is filled in for us
+        $post = auth()->user()->author->posts()->create($data);
+
+        // sync() writes the post_tag rows for the chosen tags
+        $post->tags()->sync($request->validated('tags'));
+
+        if ($post->is_published) {
+            return redirect()->route('posts.show', $post->id)->with('status', 'Post created.');
+        }
+
+        return redirect()->route('posts.index')->with('status', 'Draft saved. It will show once it is published.');
     }
 
     public function show($id)
